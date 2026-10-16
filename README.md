@@ -2,10 +2,12 @@
 
 Controle de gastos pessoal: limite do mês, cartões (limite total, limite de uso, fatura atual e limite já usado), entradas, dinheiro guardado, gráfico de gasto × guardado e avisos de limite. Uma IA (Claude) escreve avisos e relatórios que chegam no WhatsApp.
 
-- `public/`: o app (HTML, CSS e JavaScript puros). Os dados ficam no navegador de cada aparelho.
-- `api/`: funções do Vercel que guardam um **resumo** dos números, pedem o texto à IA e enviam no WhatsApp.
+- `public/`: o app (HTML, CSS e JavaScript puros).
+- `api/`: funções do Vercel: contas com e-mail e senha, banco de dados na nuvem, IA e envio no WhatsApp.
 
-> O app funciona sem configurar nada. O WhatsApp só começa a enviar depois dos passos da seção 2. Pode publicar agora e configurar depois: cada atualização no GitHub gera um novo deploy sozinho.
+> **Contas e dados na nuvem:** depois de ligar o banco (passo 2.1), o app abre pedindo para criar uma conta ou entrar. Tudo o que a pessoa lança fica guardado no banco e volta em qualquer aparelho, é só entrar com o mesmo e-mail e senha.
+> Sem o banco, o app funciona do mesmo jeito, mas os dados ficam só no navegador de cada aparelho.
+> O WhatsApp só envia depois dos passos 2.2 a 2.4. Cada atualização no GitHub gera um novo deploy sozinho.
 
 ---
 
@@ -20,8 +22,15 @@ Pronto: o app já está no ar em `https://seu-projeto.vercel.app`.
 
 Todas as variáveis ficam em **Settings → Environment Variables** do projeto. Depois de mudar variáveis, faça **Redeploy** (aba Deployments → ⋯ → Redeploy). A lista completa está em `.env.example`.
 
-### 2.1 Banco de dados (obrigatório)
-Aba **Storage → Create → Upstash (Redis)** → conecte ao projeto. O Vercel cria sozinho `KV_REST_API_URL` e `KV_REST_API_TOKEN`. O plano gratuito é suficiente.
+### 2.1 Banco de dados (contas e dados na nuvem)
+Aba **Storage → Create Database → Upstash (Redis)** → escolha a região **São Paulo (gru1)** se aparecer → **Connect** ao projeto. O Vercel cria sozinho `KV_REST_API_URL` e `KV_REST_API_TOKEN`. Depois faça **Redeploy**. O plano gratuito é suficiente para uso pessoal.
+
+O que fica guardado no banco:
+- `user:<id>`: e-mail, senha **criptografada** (scrypt), nome, WhatsApp e o resumo usado nos relatórios.
+- `data:<id>`: todos os dados do app (cartões, gastos, entradas, guardado e ajustes).
+- `sess:<…>`: as sessões de cada aparelho conectado (valem 180 dias).
+
+Proteções: no máximo 8 tentativas de login por e-mail a cada 15 minutos e 10 contas novas por hora por rede.
 
 ### 2.2 Segurança (recomendado)
 - `ALLOWED_PHONES`: seu número com DDI e DDD, por exemplo `5592999998888`. Só ele poderá receber mensagens, assim ninguém usa o seu servidor para mandar mensagens para outras pessoas.
@@ -71,16 +80,18 @@ Os relatórios automáticos usam os números da última vez que o app foi aberto
 **Limites contra abuso:** no máximo 12 mensagens por número por dia e 60 no total (`MAX_MSGS_PER_PHONE_DAY`, `MAX_MSGS_TOTAL_DAY`).
 
 ## 4. Privacidade
-- No servidor fica só: nome, número, frequência e um **resumo** dos totais (limite, gasto, %, cartões, guardado). A lista de gastos não sai do aparelho.
-- O resumo é enviado para a IA (Anthropic) para escrever a mensagem e para o provedor de WhatsApp para entregar.
+- Com conta, todos os dados do app ficam no seu banco Upstash (só o dono do projeto no Vercel tem acesso).
+- Para a IA (Anthropic) e o provedor de WhatsApp vai só o **resumo** dos totais (limite, gasto, %, cartões, guardado), nunca a lista de gastos.
+- Ainda não existe "esqueci minha senha". Se esquecer, dá para apagar a conta pelo painel do Upstash (chaves `email:<e-mail>` e `user:<id>`) e criar de novo.
 
 ## 5. Instalar no celular como app
 - **Android (Chrome):** menu ⋮ → **Instalar app**.
 - **iPhone (Safari):** Compartilhar → **Adicionar à Tela de Início**.
 
-## 6. Seus dados no aparelho
-- Ficam no navegador de cada aparelho; celular e computador não se sincronizam.
-- **Ajustes → Exportar / Importar** leva os dados de um aparelho para outro. Exporte um backup de vez em quando.
+## 6. Seus dados
+- **Com conta:** salvos na nuvem a cada alteração e também no aparelho (abre mesmo sem internet). Em outro aparelho, é só entrar.
+- **Sem conta:** ficam só no navegador daquele aparelho.
+- **Ajustes → Exportar / Importar** gera um arquivo de backup a qualquer momento.
 
 ## 7. Rodar no computador
 ```bash

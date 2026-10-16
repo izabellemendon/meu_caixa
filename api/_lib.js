@@ -31,12 +31,42 @@ export function phoneAllowed(phone) {
   const list = (process.env.ALLOWED_PHONES || '').split(',').map(normPhone).filter(Boolean);
   return list.length === 0 || list.includes(phone);
 }
+// sessões: cada aparelho que entra na conta recebe um token próprio (vale 180 dias)
+const SESSION_TTL = 60 * 60 * 24 * 180;
+export async function createSession(uid) {
+  const t = newToken();
+  await redis('SET', 'sess:' + sha(t), uid, 'EX', SESSION_TTL);
+  return t;
+}
+export async function endSession(token) { if (token) await redis('DEL', 'sess:' + sha(token)); }
 export async function auth(body) {
-  if (!validUid(body.uid)) throw httpErr(400, 'Identificação inválida.');
-  const u = await getUser(body.uid);
-  if (!u || !body.token || u.tokenHash !== sha(body.token)) throw httpErr(401, 'Não autorizado. Salve o WhatsApp de novo em Ajustes.');
+  const t = String(body.token || '');
+  if (t.length < 20) throw httpErr(401, 'Entre na sua conta de novo.');
+  const uid = await redis('GET', 'sess:' + sha(t));
+  if (!uid) throw httpErr(401, 'Sua sessão expirou. Entre na sua conta de novo.');
+  const u = await getUser(uid);
+  if (!u) throw httpErr(401, 'Conta não encontrada.');
   return u;
 }
+
+/* ---------------- senhas ---------------- */
+export function hashPassword(p) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  return salt + ':' + crypto.scryptSync(String(p), salt, 32).toString('hex');
+}
+export function checkPassword(p, stored) {
+  const [salt, h] = String(stored || '').split(':');
+  if (!salt || !h) return false;
+  const a = crypto.scryptSync(String(p), salt, 32), b = Buffer.from(h, 'hex');
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+export const normEmail = e => { const v = String(e || '').trim().toLowerCase(); return /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/.test(v) ? v : null; };
+export async function limitAttempts(key, max, windowSec) {
+  const n = await redis('INCR', key); if (n === 1) await redis('EXPIRE', key, windowSec);
+  if (n > max) throw httpErr(429, 'Muitas tentativas. Espere alguns minutos e tente de novo.');
+}
+export const clientIp = req => String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'ip';
+
 // limite de mensagens por número e no total, para ninguém usar o servidor para mandar spam
 export async function rateLimit(phone) {
   const day = new Date().toISOString().slice(0, 10);

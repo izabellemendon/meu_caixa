@@ -224,6 +224,11 @@ h2{font-size:.8rem;font-weight:600;color:var(--muted);margin:0;letter-spacing:.0
 .wa-acts .link:disabled{color:var(--muted);text-decoration:none;cursor:default}
 .set select{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 11px;width:100%;min-width:0;font:inherit;color:inherit}
 
+.acct{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:12px;font-size:.88rem}
+.acct .link{padding:0;text-decoration:underline;text-underline-offset:3px;color:var(--fg)}
+.wel-card input[type=email],.wel-card input[type=password]{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:12px 14px;font-size:1rem;width:100%;min-width:0}
+#aNote{color:var(--bad)}
+
 /* responsivo */
 .cols{display:grid;gap:28px}
 .col{display:contents}
@@ -257,6 +262,24 @@ h2{font-size:.8rem;font-weight:600;color:var(--muted);margin:0;letter-spacing:.0
 }
 @media (min-width:1400px){.wrap{max-width:1200px}}
 </style>
+
+<div class="welcome" id="authBox" hidden>
+  <form class="wel-card" id="authForm" autocomplete="on">
+    <div class="wel-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="var(--bg)" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><circle cx="16.5" cy="15" r="1.3" fill="var(--bg)" stroke="none"/></svg></div>
+    <h1 id="authTitle">Crie sua conta</h1>
+    <p class="muted">Seus dados ficam guardados na nuvem. Em qualquer celular ou computador, é só entrar com seu e-mail e senha.</p>
+    <div class="seg" role="group" aria-label="Conta">
+      <button type="button" data-amode="signup" aria-pressed="true">Criar conta</button>
+      <button type="button" data-amode="login" aria-pressed="false">Já tenho conta</button>
+    </div>
+    <label id="aNameWrap">Seu nome<input id="aName" type="text" autocomplete="given-name" placeholder="Como podemos te chamar?"></label>
+    <label>E-mail<input id="aEmail" type="email" autocomplete="email" inputmode="email" placeholder="voce@email.com" required></label>
+    <label>Senha<input id="aPass" type="password" autocomplete="new-password" minlength="6" placeholder="Mínimo 6 caracteres" required></label>
+    <p class="cap" id="aNote" role="status"></p>
+    <button class="go" type="submit" id="aGo">Criar conta</button>
+    <button class="skip" type="button" id="aSkip">Usar sem conta (dados só neste aparelho)</button>
+  </form>
+</div>
 
 <div class="welcome" id="welcome" hidden>
   <form class="wel-card" id="welForm" autocomplete="on">
@@ -302,6 +325,7 @@ h2{font-size:.8rem;font-weight:600;color:var(--muted);margin:0;letter-spacing:.0
       <label>Meta para guardar por mês (R$)<input id="sSave" inputmode="decimal" placeholder="510,00"></label>
     </div>
     <div id="notifRow" class="cap"></div>
+    <div class="acct" id="acctBox" hidden></div>
     <div class="wa" id="waBox">
       <div class="wa-h">WhatsApp</div>
       <div class="set-row">
@@ -430,17 +454,23 @@ let S=blank();
 let docRef=null,timer=null,saving=false,again=false;
 const LS='meu-caixa-v1';
 const say=t=>$('saveState').textContent=t;
-function save(){clearTimeout(timer);timer=setTimeout(flush,500);say('Salvando…');scheduleSync()}
+function save(){clearTimeout(timer);timer=setTimeout(flush,500);say('Salvando…')}
 async function flush(){
   if(saving){again=true;return}saving=true;
   const snap=JSON.parse(JSON.stringify(S));
   try{
     if(docRef){await docRef.set(snap);say('Salvo na sua conta')}
-    else{try{localStorage.setItem(LS,JSON.stringify(snap));say('Salvo neste navegador')}catch(e){say('Não foi possível salvar')}}
+    else{
+      try{localStorage.setItem(LS,JSON.stringify(snap))}catch(e){}
+      if(cloudOn()){
+        try{await apiPost('save',{token:SESSION.token,state:snap,summary:buildSummary()});say('Salvo na sua conta')}
+        catch(e){if(e.status===401){setSession(null);say('Sua sessão expirou. Entre de novo para salvar na nuvem.');showAuth('login')}else say('Sem conexão: salvo neste aparelho. Envia para a nuvem na próxima alteração.')}
+      }else say('Salvo neste navegador');
+    }
   }catch(e){say(e&&e.code==='quota_exceeded'?'Espaço cheio: apague movimentações antigas':'Falha ao salvar. Tente de novo em instantes')}
   saving=false;if(again){again=false;flush()}
 }
-const normalize=o=>{const b=blank();if(!o||typeof o!=='object')return b;return{...b,...o,settings:{...b.settings,...(o.settings||{})},profile:{...(o.profile||{})}}};
+const normalize=o=>{const b=blank();if(!o||typeof o!=='object')return b;const pf={...(o.profile||{})};delete pf.uid;delete pf.token;return{...b,...o,settings:{...b.settings,...(o.settings||{})},profile:pf}};
 async function init(){
   try{const r=localStorage.getItem(LS);if(r)S=normalize(JSON.parse(r))}catch(e){}
   render(false);say('Salvo neste navegador');
@@ -673,6 +703,7 @@ $('cardForm').addEventListener('submit',e=>{
 });
 document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.amode){setAMode(b.dataset.amode);return}
   if(b.dataset.wfreq){wFreq=b.dataset.wfreq;document.querySelectorAll('[data-wfreq]').forEach(x=>x.setAttribute('aria-pressed',x===b));return}
   if(b.dataset.range!==undefined){pieRange=+b.dataset.range;document.querySelectorAll('[data-range]').forEach(x=>x.setAttribute('aria-pressed',x===b));renderPie();return}
   if(b.dataset.editcard){editId=b.dataset.editcard;render(false);const f=$('edName');if(f)f.focus();return}
@@ -723,19 +754,106 @@ function shift(d){const[y,m]=curMonth.split('-').map(Number);const n=new Date(y,
 $('prevM').onclick=()=>shift(-1);$('nextM').onclick=()=>shift(1);
 
 /* ---------- boas-vindas e WhatsApp ---------- */
-let API=null,syncT=null,wFreq='semanal';
+let API=null,wFreq='semanal';
 const normPhone=p=>{let d=String(p||'').replace(/\D/g,'');if(d.length===10||d.length===11)d='55'+d;return /^55\d{10,11}$/.test(d)?d:null};
 const fmtPhone=d=>d?`(${d.slice(2,4)}) ${d.slice(4,d.length-4)}-${d.slice(-4)}`:'';
+const SK='meu-caixa-session',NOCLOUD='meu-caixa-sem-conta';
+let SESSION=null;try{SESSION=JSON.parse(localStorage.getItem(SK)||'null')}catch(e){}
+function setSession(v){SESSION=v;try{v?localStorage.setItem(SK,JSON.stringify(v)):localStorage.removeItem(SK)}catch(e){}renderAccount()}
+const cloudOn=()=>!!(API&&API.storage&&SESSION&&SESSION.token);
 async function apiInit(){
-  try{const r=await fetch('/api/health',{cache:'no-store'});if(!r.ok)throw 0;API=await r.json();if(!API||!API.ok)throw 0}catch(e){API=false}
-  renderWa();
-  if(waReady()&&S.profile.optIn&&S.profile.phone&&!S.profile.token)registerWa(false);
+  try{
+    const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),5000);
+    const r=await fetch('/api/health',{cache:'no-store',signal:ctl.signal});clearTimeout(t);
+    if(!r.ok)throw 0;API=await r.json();if(!API||!API.ok)throw 0;
+  }catch(e){API=false}
+  renderWa();renderAccount();
 }
 async function apiPost(path,body){
   const r=await fetch('/api/'+path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
-  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Não foi possível falar com o servidor.');return j;
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok){const err=new Error(j.error||'Não foi possível falar com o servidor.');err.status=r.status;throw err}
+  return j;
 }
-function ensureUid(){if(!S.profile.uid)S.profile.uid=(uid()+uid()).replace(/[^a-z0-9]/gi,'').slice(0,24);return S.profile.uid}
+const hasData=()=>!!(S.cards.length||S.expenses.length||S.incomes.length||S.savings.length);
+async function loadCloud(){
+  say('Carregando sua conta…');
+  try{
+    const j=await apiPost('load',{token:SESSION.token});
+    if(j.state){S=normalize(j.state);try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
+    else if(hasData()||S.profile.done)await flush(); // conta nova: sobe o que já estava neste aparelho
+    say('Salvo na sua conta');
+  }catch(e){
+    if(e.status===401){setSession(null);showAuth('login');return}
+    say('Sem conexão: mostrando os dados salvos neste aparelho.');
+  }
+  render(false);renderWa();renderAccount();maybeWelcome();
+}
+let aMode='signup';
+function setAMode(m){
+  aMode=m;document.querySelectorAll('[data-amode]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.amode===m));
+  $('authTitle').textContent=m==='signup'?'Crie sua conta':'Entre na sua conta';
+  $('aGo').textContent=m==='signup'?'Criar conta':'Entrar';
+  $('aNameWrap').hidden=m!=='signup';
+  $('aPass').setAttribute('autocomplete',m==='signup'?'new-password':'current-password');
+  $('aNote').textContent='';
+}
+function showAuth(mode){
+  setAMode(mode||'signup');$('welcome').hidden=true;
+  $('authBox').hidden=false;document.body.style.overflow='hidden';
+  if(S.profile.name&&!$('aName').value)$('aName').value=S.profile.name;
+  setTimeout(()=>{try{$(aMode==='signup'?'aName':'aEmail').focus()}catch(e){}},60);
+}
+function hideAuth(){$('authBox').hidden=true;document.body.style.overflow=''}
+$('authForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const email=$('aEmail').value.trim().toLowerCase(),pass=$('aPass').value,name=$('aName').value.trim().slice(0,40);
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){$('aNote').textContent='Digite um e-mail válido.';$('aEmail').focus();return}
+  if(pass.length<6){$('aNote').textContent='A senha precisa ter pelo menos 6 caracteres.';$('aPass').focus();return}
+  const btn=$('aGo'),label=btn.textContent;btn.disabled=true;btn.textContent='Aguarde…';$('aNote').textContent='';
+  try{
+    if(aMode==='signup'){
+      const j=await apiPost('signup',{email,password:pass,name});
+      setSession({token:j.token,email});
+      if(name&&!S.profile.name)S.profile.name=name;
+      hideAuth();await flush();render(false);renderWa();maybeWelcome();
+      toast({t:'Conta criada',b:'Seus dados agora ficam guardados na nuvem.'});
+    }else{
+      const j=await apiPost('login',{email,password:pass});
+      setSession({token:j.token,email});hideAuth();
+      await loadCloud();
+      toast({t:'Bem-vinda de volta!',b:'Seus dados foram carregados.'});
+    }
+    try{localStorage.removeItem(NOCLOUD)}catch(e){}
+    $('aPass').value='';
+  }catch(err){$('aNote').textContent=err.message}
+  btn.disabled=false;btn.textContent=label;
+});
+$('aSkip').onclick=()=>{try{localStorage.setItem(NOCLOUD,'1')}catch(e){}hideAuth();maybeWelcome()};
+function renderAccount(){
+  const box=$('acctBox');if(!box)return;
+  if(!(API&&API.storage)){box.hidden=true;return}
+  box.hidden=false;
+  box.innerHTML=SESSION?`<span>Conta: <b>${esc(SESSION.email||'')}</b> · dados salvos na nuvem</span><button class="link" type="button" id="acctOut">Sair</button>`
+    :`<span>Seus dados estão só neste aparelho.</span><button class="link" type="button" id="acctIn">Entrar ou criar conta</button>`;
+  if($('acctOut'))$('acctOut').onclick=async()=>{
+    clearTimeout(timer);await flush();
+    try{await apiPost('logout',{token:SESSION.token})}catch(e){}
+    setSession(null);S=blank();try{localStorage.removeItem(LS)}catch(e){}
+    render(false);renderWa();showAuth('login');
+  };
+  if($('acctIn'))$('acctIn').onclick=()=>showAuth('signup');
+}
+async function startApp(){
+  await init();
+  await apiInit();
+  if(API&&API.storage){
+    if(SESSION)return loadCloud();
+    let skipped=false;try{skipped=localStorage.getItem(NOCLOUD)==='1'}catch(e){}
+    if(!skipped)return showAuth(hasData()?'signup':'signup');
+  }
+  maybeWelcome();
+}
 function buildSummary(){
   const m=monthOf(todayISO),C=compute(m),np=nextPayday();
   const goal=(S.saveGoals[m]>0?S.saveGoals[m]:+S.settings.saveGoal)||0;
@@ -750,10 +868,10 @@ function buildSummary(){
 }
 const waReady=()=>!!(API&&API.storage&&API.whatsapp);
 async function registerWa(showToast=true){
-  if(!waReady())return;ensureUid();
+  if(!waReady())return;
+  if(!SESSION){if(showToast)toast({t:'Entre na sua conta',b:'Para receber mensagens no WhatsApp, crie uma conta ou entre em Ajustes.'});return}
   try{
-    const j=await apiPost('register',{uid:S.profile.uid,token:S.profile.token,name:S.profile.name,phone:S.profile.phone,freq:S.profile.freq,optIn:!!S.profile.optIn,summary:buildSummary()});
-    if(j.token){S.profile.token=j.token;save()}
+    const j=await apiPost('register',{token:SESSION.token,name:S.profile.name,phone:S.profile.phone,freq:S.profile.freq,optIn:!!S.profile.optIn,summary:buildSummary()});
     if(showToast){
       if(j.welcomed)toast({t:'Mensagem enviada no WhatsApp',b:'Confira as boas-vindas no seu WhatsApp.'});
       else if(j.error)toast({t:'WhatsApp não enviado',b:j.error});
@@ -762,13 +880,9 @@ async function registerWa(showToast=true){
   }catch(e){if(showToast)toast({t:'WhatsApp não enviado',b:e.message})}
   renderWa();
 }
-function scheduleSync(){
-  if(!waReady()||!S.profile||!S.profile.token)return;
-  clearTimeout(syncT);syncT=setTimeout(()=>apiPost('sync',{uid:S.profile.uid,token:S.profile.token,summary:buildSummary()}).catch(()=>{}),4000);
-}
 function notifyWa(fresh){
-  if(!waReady()||!S.profile.token||!S.profile.optIn||!fresh.length)return;
-  apiPost('notify',{uid:S.profile.uid,token:S.profile.token,alerts:fresh.map(a=>({t:a.t,b:a.b,lv:a.lv})),summary:buildSummary()})
+  if(!waReady()||!SESSION||!S.profile.optIn||!fresh.length)return;
+  apiPost('notify',{token:SESSION.token,alerts:fresh.map(a=>({t:a.t,b:a.b,lv:a.lv})),summary:buildSummary()})
     .catch(e=>toast({t:'Aviso no WhatsApp não enviado',b:e.message}));
 }
 function renderWa(){
@@ -778,11 +892,12 @@ function renderWa(){
   $('waNote').textContent=API===null?'Verificando o servidor…'
     :API===false?'As mensagens no WhatsApp funcionam na versão publicada no Vercel. Aqui o número fica salvo, mas nada é enviado.'
     :!(API.storage&&API.whatsapp)?'O app está no ar, mas o envio pelo WhatsApp ainda não foi configurado no Vercel. Seu número fica salvo e as mensagens começam quando a configuração estiver pronta.'
+    :!SESSION?'Para receber mensagens no WhatsApp, entre ou crie sua conta (logo acima).'
     :(p.optIn&&p.phone?`Mensagens vão para ${fmtPhone(p.phone)}${API.ai?' e são escritas pela IA':''}.`:'Coloque seu número e marque a opção para receber mensagens.');
-  $('waReport').disabled=!(waReady()&&p.token&&p.optIn);
+  $('waReport').disabled=!(waReady()&&SESSION&&p.optIn);
 }
 function maybeWelcome(){
-  if(S.profile.done)return;
+  if(S.profile.done||!$('authBox').hidden)return;
   $('welcome').hidden=false;document.body.style.overflow='hidden';
   if(S.profile.name)$('wName').value=S.profile.name;
   setTimeout(()=>{try{$('wName').focus()}catch(e){}},60);
@@ -808,7 +923,7 @@ $('waSave').onclick=()=>{
 };
 $('waReport').onclick=async()=>{
   const b=$('waReport');b.disabled=true;b.textContent='Enviando…';
-  try{await apiPost('report',{uid:S.profile.uid,token:S.profile.token,summary:buildSummary()});toast({t:'Relatório enviado',b:'Confira seu WhatsApp.'})}
+  try{await apiPost('report',{token:SESSION.token,summary:buildSummary()});toast({t:'Relatório enviado',b:'Confira seu WhatsApp.'})}
   catch(e){toast({t:'Relatório não enviado',b:e.message})}
   b.textContent='Enviar relatório agora';renderWa();
 };
@@ -828,8 +943,7 @@ function loadExample(){
     {id:uid(),desc:'Conta de luz',amount:212.6,date:d(14),method:'pix'}];
   curMonth=m;save();render(false);
 }
-init().then(maybeWelcome,maybeWelcome);
-apiInit();
+startApp();
 })();
 </script>
 
