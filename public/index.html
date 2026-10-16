@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <style>
 :root{color-scheme:light dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
@@ -229,6 +229,23 @@ h2{font-size:.8rem;font-weight:600;color:var(--muted);margin:0;letter-spacing:.0
 .wel-card input[type=email],.wel-card input[type=password]{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:12px 14px;font-size:1rem;width:100%;min-width:0}
 #aNote{color:var(--bad)}
 
+/* instalar app */
+.inst{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:25;width:min(520px,calc(100vw - 24px));
+  background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;box-shadow:0 12px 32px rgba(0,0,0,.18)}
+.inst-ic{width:42px;height:42px;border-radius:11px;background:var(--fg);display:grid;place-items:center}
+.inst-t{display:grid;gap:1px;font-size:.84rem;min-width:0}
+.inst-t span{color:var(--muted)}
+.inst-a{display:grid;gap:4px;justify-items:end}
+.inst-go{background:var(--accent);color:var(--accent-ink);border-radius:10px;padding:8px 14px;font-weight:600}
+.inst-no{color:var(--muted);font-size:.8rem;padding:2px 4px}
+@media (max-width:400px){.inst{grid-template-columns:auto minmax(0,1fr)}.inst-a{grid-column:1/-1;grid-template-columns:1fr auto;align-items:center}.inst-go{width:100%}}
+.sheet-bg{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.45);display:grid;align-items:end;justify-items:center}
+.sheet{background:var(--bg);width:min(520px,100%);border-radius:20px 20px 0 0;padding:20px max(18px,env(safe-area-inset-left,0px)) calc(20px + env(safe-area-inset-bottom,0px));display:grid;gap:16px}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.steps li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;font-size:.95rem}
+.steps .n{width:26px;height:26px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-weight:700;font-size:.85rem}
+.steps .ico{vertical-align:-3px}
+
 /* responsivo */
 .cols{display:grid;gap:28px}
 .col{display:contents}
@@ -326,6 +343,7 @@ h2{font-size:.8rem;font-weight:600;color:var(--muted);margin:0;letter-spacing:.0
     </div>
     <div id="notifRow" class="cap"></div>
     <div class="acct" id="acctBox" hidden></div>
+    <div class="acct" id="instRow" hidden><span>Use como app no celular ou computador.</span><button class="link" type="button" id="instRowBtn">Instalar app</button></div>
     <div class="wa" id="waBox">
       <div class="wa-h">WhatsApp</div>
       <div class="set-row">
@@ -430,6 +448,25 @@ h2{font-size:.8rem;font-weight:600;color:var(--muted);margin:0;letter-spacing:.0
   <div class="cap" id="saveState" style="text-align:center"></div>
 </div>
 <div class="toasts" id="toasts"></div>
+
+<div class="inst" id="instBar" hidden role="dialog" aria-labelledby="instTitle">
+  <div class="inst-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--bg)" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/></svg></div>
+  <div class="inst-t"><b id="instTitle">Instale o Meu Caixa</b><span>Fica na tela inicial, abre em tela cheia e funciona sem internet.</span></div>
+  <div class="inst-a"><button type="button" class="inst-go" id="instGo">Instalar</button><button type="button" class="inst-no" id="instNo">Agora não</button></div>
+</div>
+
+<div class="sheet-bg" id="iosSheet" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="iosTitle">
+    <h2 id="iosTitle" style="text-transform:none;letter-spacing:0;font-size:1.15rem;color:var(--fg)">Instalar no iPhone</h2>
+    <ol class="steps">
+      <li><span class="n">1</span><span>Abra este site no <b>Safari</b>.</span></li>
+      <li><span class="n">2</span><span>Toque no botão <b>Compartilhar</b> <svg class="ico" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-label="ícone compartilhar"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> na barra de baixo.</span></li>
+      <li><span class="n">3</span><span>Role e toque em <b>Adicionar à Tela de Início</b>.</span></li>
+      <li><span class="n">4</span><span>Toque em <b>Adicionar</b>. O ícone do Meu Caixa aparece junto dos seus apps.</span></li>
+    </ol>
+    <button type="button" class="go" id="iosOk">Entendi</button>
+  </div>
+</div>
 
 <script>
 (function(){
@@ -804,7 +841,7 @@ function showAuth(mode){
   if(S.profile.name&&!$('aName').value)$('aName').value=S.profile.name;
   setTimeout(()=>{try{$(aMode==='signup'?'aName':'aEmail').focus()}catch(e){}},60);
 }
-function hideAuth(){$('authBox').hidden=true;document.body.style.overflow=''}
+function hideAuth(){$('authBox').hidden=true;document.body.style.overflow='';setTimeout(renderInstall,1500)}
 $('authForm').addEventListener('submit',async e=>{
   e.preventDefault();
   const email=$('aEmail').value.trim().toLowerCase(),pass=$('aPass').value,name=$('aName').value.trim().slice(0,40);
@@ -908,7 +945,7 @@ $('welForm').addEventListener('submit',e=>{
   const raw=$('wPhone').value.trim(),phone=raw?normPhone(raw):null;
   if(raw&&!phone){$('wNote').textContent='Número inválido. Use DDD + número, por exemplo (92) 99999-9999.';$('wPhone').focus();return}
   S.profile={...S.profile,name,phone,freq:wFreq,optIn:!!phone&&$('wOpt').checked,done:true};
-  $('welcome').hidden=true;document.body.style.overflow='';
+  $('welcome').hidden=true;document.body.style.overflow='';setTimeout(renderInstall,2500);
   save();render(false);renderWa();
   toast({t:`Boas-vindas, ${name}!`,b:'Comece em Ajustes: quanto pode gastar por mês e o dia do pagamento.'});
   if(S.profile.optIn&&waReady())registerWa(true);
@@ -928,6 +965,45 @@ $('waReport').onclick=async()=>{
   b.textContent='Enviar relatório agora';renderWa();
 };
 
+/* ---------- instalar como app ---------- */
+let installEvt=null;
+const INST_KEY='meu-caixa-instalar-depois';
+const isStandalone=()=>{try{return matchMedia('(display-mode: standalone)').matches||navigator.standalone===true}catch(e){return false}};
+const isIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const canInstallHere=()=>!!document.querySelector('link[rel="manifest"]')&&!isStandalone();
+function installAvailable(){return canInstallHere()&&(!!installEvt||isIOS())}
+function renderInstall(){
+  $('instRow').hidden=!installAvailable();
+  let later=0;try{later=+localStorage.getItem(INST_KEY)||0}catch(e){}
+  const busy=!$('authBox').hidden||!$('welcome').hidden;
+  $('instBar').hidden=!(installAvailable()&&!busy&&Date.now()>later);
+}
+async function doInstall(){
+  if(installEvt){
+    installEvt.prompt();
+    try{const r=await installEvt.userChoice;if(r.outcome==='accepted')toast({t:'App instalado',b:'O Meu Caixa agora está na sua tela inicial.'})}catch(e){}
+    installEvt=null;$('instBar').hidden=true;renderInstall();
+  }else if(isIOS()){$('iosSheet').hidden=false;$('instBar').hidden=true}
+}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;renderInstall()});
+window.addEventListener('appinstalled',()=>{installEvt=null;$('instBar').hidden=true;renderInstall()});
+$('instGo').onclick=doInstall;$('instRowBtn').onclick=doInstall;
+$('instNo').onclick=()=>{try{localStorage.setItem(INST_KEY,String(Date.now()+7*864e5))}catch(e){}$('instBar').hidden=true};
+$('iosOk').onclick=()=>{$('iosSheet').hidden=true};
+$('iosSheet').addEventListener('click',e=>{if(e.target.id==='iosSheet')$('iosSheet').hidden=true});
+// atalhos do ícone (segurar o ícone no celular): ?acao=gasto | entrada | cartoes | guardar
+function runShortcut(){
+  let a=null;try{a=new URLSearchParams(location.search).get('acao')}catch(e){}
+  if(!a)return;
+  try{history.replaceState(null,'',location.pathname)}catch(e){}
+  const go=()=>{
+    if(a==='gasto'||a==='entrada'){setKind(a==='gasto'?'out':'in');$('addForm').scrollIntoView({block:'center'});setTimeout(()=>$('aAmt').focus(),250)}
+    else if(a==='cartoes')$('secCards').scrollIntoView({block:'start'});
+    else if(a==='guardar'){$('secSave').scrollIntoView({block:'center'});setTimeout(()=>$('svAmt').focus(),250)}
+  };
+  setTimeout(go,400);
+}
+
 function loadExample(){
   const m=monthOf(todayISO),d=n=>`${m}-${pad(Math.min(n,28))}`,a='c'+uid(),b='c'+uid();
   const pf=S.profile;S=blank();S.profile=pf;S.example=true;S.settings={defLimit:3000,payday:5,threshold:80,saveGoal:500};S.savings=[{id:uid(),amount:300,date:d(5)}];
@@ -943,7 +1019,7 @@ function loadExample(){
     {id:uid(),desc:'Conta de luz',amount:212.6,date:d(14),method:'pix'}];
   curMonth=m;save();render(false);
 }
-startApp();
+startApp().then(()=>{runShortcut();setTimeout(renderInstall,1500)});
 })();
 </script>
 

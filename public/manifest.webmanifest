@@ -1,18 +1,28 @@
 {
+  "id": "/",
   "name": "Meu Caixa do Mês",
   "short_name": "Meu Caixa",
   "description": "Controle de gastos pessoal: limite do mês, cartões, faturas, entradas e dinheiro guardado.",
   "lang": "pt-BR",
-  "start_url": "/",
+  "dir": "ltr",
+  "start_url": "/?origem=app",
   "scope": "/",
   "display": "standalone",
-  "orientation": "any",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
   "background_color": "#fafaf9",
   "theme_color": "#1c1c1a",
+  "categories": ["finance", "productivity"],
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
     { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "shortcuts": [
+    { "name": "Lançar gasto", "short_name": "Gasto", "url": "/?acao=gasto", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Lançar entrada", "short_name": "Entrada", "url": "/?acao=entrada", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Ver cartões", "short_name": "Cartões", "url": "/?acao=cartoes", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Guardar dinheiro", "short_name": "Guardar", "url": "/?acao=guardar", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
   ]
 }

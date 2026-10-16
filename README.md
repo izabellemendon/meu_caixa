@@ -85,8 +85,16 @@ Os relatórios automáticos usam os números da última vez que o app foi aberto
 - Ainda não existe "esqueci minha senha". Se esquecer, dá para apagar a conta pelo painel do Upstash (chaves `email:<e-mail>` e `user:<id>`) e criar de novo.
 
 ## 5. Instalar no celular como app
-- **Android (Chrome):** menu ⋮ → **Instalar app**.
-- **iPhone (Safari):** Compartilhar → **Adicionar à Tela de Início**.
+O Meu Caixa é um PWA: instalado, ganha ícone na tela inicial, abre em tela cheia (sem barra do navegador) e funciona sem internet.
+
+- O próprio app mostra um convite **"Instale o Meu Caixa"** e tem o botão **Ajustes → Instalar app**.
+- **Android (Chrome, Samsung Internet, Edge):** o botão abre a instalação do sistema direto.
+- **iPhone/iPad:** o botão mostra o passo a passo (Safari → Compartilhar → **Adicionar à Tela de Início**). A Apple não deixa sites instalarem sozinhos.
+- **Computador (Chrome/Edge):** o botão instala como app de janela própria.
+
+**Atalhos do ícone:** segurando o ícone no Android (ou clicando com o botão direito no computador) aparecem *Lançar gasto*, *Lançar entrada*, *Ver cartões* e *Guardar dinheiro*.
+
+**Quer na Play Store?** Dá para empacotar este mesmo app em https://www.pwabuilder.com (cole o link do Vercel → Android → gera o pacote para a Play Console; a conta de desenvolvedor do Google custa US$ 25 uma vez). Para a App Store é preciso um Mac e a conta de desenvolvedor da Apple (US$ 99 por ano).
 
 ## 6. Seus dados
 - **Com conta:** salvos na nuvem a cada alteração e também no aparelho (abre mesmo sem internet). Em outro aparelho, é só entrar.
