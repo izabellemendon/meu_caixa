@@ -246,6 +246,23 @@ h2{font-size:.8rem;font-weight:600;color:var(--muted);margin:0;letter-spacing:.0
 .steps .n{width:26px;height:26px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-weight:700;font-size:.85rem}
 .steps .ico{vertical-align:-3px}
 
+/* como usar */
+.top-acts{display:flex;gap:2px;align-items:center}
+.help{max-height:min(88vh,860px);overflow:auto;gap:14px}
+.help-h{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.help-h h2{text-transform:none;letter-spacing:0;font-size:1.2rem;color:var(--fg);font-weight:700}
+.help-list{display:grid;gap:8px}
+.help details{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:0 14px}
+.help summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;padding:12px 0;font-weight:600}
+.help summary::-webkit-details-marker{display:none}
+.help summary::after{content:"+";margin-left:auto;color:var(--muted);font-weight:500;font-size:1.1rem}
+.help details[open] summary::after{content:"–"}
+.help .n{width:24px;height:24px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-size:.8rem;flex:none}
+.help details p,.help details ul{margin:0 0 10px;font-size:.92rem;line-height:1.5}
+.help details ul{padding-left:18px;display:grid;gap:4px}
+@media (min-width:700px){.sheet-bg{align-items:center}.sheet{border-radius:20px}}
+@media (max-width:380px){.gear{padding:6px 7px;font-size:.84rem}}
+
 /* responsivo */
 .cols{display:grid;gap:28px}
 .col{display:contents}
@@ -329,7 +346,7 @@ h2{font-size:.8rem;font-weight:600;color:var(--muted);margin:0;letter-spacing:.0
       <span id="monthLabel"></span>
       <button id="nextM" aria-label="Próximo mês">›</button>
     </div>
-    <button class="gear" id="gearBtn" aria-expanded="false">Ajustes</button>
+    <div class="top-acts"><button class="gear" id="helpBtn" type="button">Como usar</button><button class="gear" id="gearBtn" aria-expanded="false">Ajustes</button></div>
   </div>
 
   <div id="setBox" class="set" hidden>
@@ -453,6 +470,54 @@ h2{font-size:.8rem;font-weight:600;color:var(--muted);margin:0;letter-spacing:.0
   <div class="inst-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--bg)" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/></svg></div>
   <div class="inst-t"><b id="instTitle">Instale o Meu Caixa</b><span>Fica na tela inicial, abre em tela cheia e funciona sem internet.</span></div>
   <div class="inst-a"><button type="button" class="inst-go" id="instGo">Instalar</button><button type="button" class="inst-no" id="instNo">Agora não</button></div>
+</div>
+
+<div class="sheet-bg" id="helpSheet" hidden>
+  <div class="sheet help" role="dialog" aria-labelledby="helpTitle">
+    <div class="help-h"><h2 id="helpTitle">Como usar o Meu Caixa</h2><button type="button" class="x help-x" id="helpClose" aria-label="Fechar">Fechar</button></div>
+    <p class="muted" style="margin:0">Siga os passos na ordem na primeira vez. Depois, é só lançar o que entra e o que sai.</p>
+    <div class="help-list">
+      <details open><summary><span class="n">1</span>Defina seu limite do mês</summary>
+        <p>Toque em <b>Ajustes</b> no topo e preencha:</p>
+        <ul><li><b>Posso gastar por mês:</b> o máximo que você quer gastar no mês, somando cartão, Pix, débito e dinheiro.</li>
+        <li><b>Dia do pagamento:</b> o dia em que seu salário cai. É até ele que o app conta o dinheiro livre.</li>
+        <li><b>Avisar quando chegar a (%):</b> por exemplo 80%. Você recebe um aviso nessa porcentagem, ao atingir 100% e ao passar.</li>
+        <li><b>Meta para guardar por mês:</b> quanto quer separar todo mês.</li></ul></details>
+      <details><summary><span class="n">2</span>Cadastre seus cartões</summary>
+        <p>Em <b>Cartões</b>, toque em <b>+ cartão</b>:</p>
+        <ul><li><b>Limite total:</b> o limite que o banco te deu.</li>
+        <li><b>Limite de uso:</b> quanto você se permite gastar nesse cartão no mês (opcional).</li>
+        <li><b>Fatura atual:</b> o valor da fatura deste mês.</li>
+        <li><b>Limite já usado:</b> o número que o app do banco mostra como usado. Ele já inclui a fatura e as parcelas futuras.</li></ul>
+        <p>Para mudar depois, toque em <b>editar</b> no cartão. A fatura também pode ser corrigida tocando direto no valor.</p></details>
+      <details><summary><span class="n">3</span>Lance o que entrou</summary>
+        <p>No quadro de lançar, escolha <b>Entrada</b>, digite o valor e a origem (salário, freela…) e toque em <b>Adicionar entrada</b>.</p></details>
+      <details><summary><span class="n">4</span>Lance cada gasto</summary>
+        <p>Escolha <b>Gasto</b>, digite o valor, uma descrição e toque em como pagou: <b>Pix/débito</b>, <b>Dinheiro</b> ou um dos seus cartões.</p>
+        <p>Gasto no cartão entra sozinho na fatura daquele cartão. Errou? Toque no <b>×</b> ao lado do lançamento em Movimentações.</p></details>
+      <details><summary><span class="n">5</span>Entenda os números do topo</summary>
+        <ul><li><b>Livre até o pagamento:</b> entradas do mês − gastos fora do cartão − faturas − o que você guardou. Embaixo aparece quanto dá para gastar por dia.</li>
+        <li><b>Barra do limite:</b> verde dentro do limite, amarela perto, roxa ao atingir e vermelha ao passar.</li>
+        <li><b>Gastei:</b> tudo das faturas mais o que saiu por Pix, débito e dinheiro.</li>
+        <li><b>Cartões:</b> o quadro de cima soma todos; cada cartão mostra quanto sobrou de limite.</li></ul></details>
+      <details><summary><span class="n">6</span>Guarde dinheiro</summary>
+        <p>Em <b>Dinheiro guardado</b>:</p>
+        <ul><li><b>Já tenho guardado:</b> o que você já tinha antes de usar o app.</li>
+        <li><b>Vou guardar este mês:</b> sua meta do mês.</li>
+        <li>Digite um valor e toque em <b>Guardar</b> ou <b>Retirar</b>. O valor guardado sai do dinheiro livre.</li></ul>
+        <p>O gráfico <b>Gasto × guardado</b> mostra a proporção no mês ou em 3, 6, 12 meses.</p></details>
+      <details><summary><span class="n">7</span>Avisos e WhatsApp</summary>
+        <p>Os avisos aparecem no topo da tela e numa mensagem rápida assim que você lança algo. Em <b>Ajustes → WhatsApp</b> você coloca o número e escolhe receber relatórios toda segunda, todo dia ou só os avisos. O botão <b>Enviar relatório agora</b> manda um resumo na hora.</p></details>
+      <details><summary><span class="n">8</span>Outros meses</summary>
+        <p>Use as setas <b>‹ ›</b> ao lado do mês, no topo. Cada mês tem suas entradas, gastos e faturas. O limite de uso pode ser diferente em cada mês.</p></details>
+      <details><summary><span class="n">9</span>Sua conta e backup</summary>
+        <p>Com conta, tudo fica salvo na nuvem: em outro celular ou computador, é só entrar com o mesmo e-mail e senha. Em <b>Ajustes</b> você vê a conta conectada e pode <b>Sair</b>. <b>Exportar</b> gera um arquivo de backup, e <b>Importar</b> carrega esse arquivo.</p></details>
+      <details><summary><span class="n">10</span>Deixe na tela do celular</summary>
+        <p>Em <b>Ajustes → Instalar app</b> (ou no convite que aparece embaixo). No iPhone: Safari → <b>Compartilhar</b> → <b>Adicionar à Tela de Início</b>. Segurando o ícone no Android aparecem atalhos para lançar gasto, entrada, ver cartões e guardar.</p></details>
+    </div>
+    <button type="button" class="link" id="helpExample" style="justify-self:start;text-decoration:underline;text-underline-offset:3px;color:var(--fg);padding:0">Ver o app com dados de exemplo</button>
+    <button type="button" class="go" id="helpOk">Entendi</button>
+  </div>
 </div>
 
 <div class="sheet-bg" id="iosSheet" hidden>
@@ -620,8 +685,9 @@ function render(notify=true){
 
   const empty=!S.cards.length&&!S.expenses.length&&!S.incomes.length;
   $('exBox').innerHTML=S.example?`<div class="ex"><span>Você está vendo dados de exemplo.</span><button id="exClear">Apagar e começar</button></div>`
-    :empty?`<div class="ex"><span>Comece pelos Ajustes: quanto pode gastar e dia do pagamento.</span><button id="exLoad">Ver exemplo</button></div>`:'';
+    :empty?`<div class="ex"><span>Primeira vez aqui? Veja o passo a passo.</span><span style="display:flex;gap:14px"><button id="exHelp">Como usar</button><button id="exLoad">Ver exemplo</button></span></div>`:'';
   if($('exLoad'))$('exLoad').onclick=loadExample;
+  if($('exHelp'))$('exHelp').onclick=openHelp;
   if($('exClear'))$('exClear').onclick=()=>{const pf=S.profile;S=blank();S.profile=pf;save();render(false)};
 
   const np=nextPayday();
@@ -947,7 +1013,8 @@ $('welForm').addEventListener('submit',e=>{
   S.profile={...S.profile,name,phone,freq:wFreq,optIn:!!phone&&$('wOpt').checked,done:true};
   $('welcome').hidden=true;document.body.style.overflow='';setTimeout(renderInstall,2500);
   save();render(false);renderWa();
-  toast({t:`Boas-vindas, ${name}!`,b:'Comece em Ajustes: quanto pode gastar por mês e o dia do pagamento.'});
+  toast({t:`Boas-vindas, ${name}!`,b:'Veja o passo a passo em Como usar. Você pode abrir de novo no topo da tela.'});
+  if(!hasData())setTimeout(openHelp,600);
   if(S.profile.optIn&&waReady())registerWa(true);
 });
 $('wSkip').onclick=()=>{S.profile.done=true;$('welcome').hidden=true;document.body.style.overflow='';save();render(false)};
@@ -975,7 +1042,7 @@ function installAvailable(){return canInstallHere()&&(!!installEvt||isIOS())}
 function renderInstall(){
   $('instRow').hidden=!installAvailable();
   let later=0;try{later=+localStorage.getItem(INST_KEY)||0}catch(e){}
-  const busy=!$('authBox').hidden||!$('welcome').hidden;
+  const busy=!$('authBox').hidden||!$('welcome').hidden||!$('helpSheet').hidden;
   $('instBar').hidden=!(installAvailable()&&!busy&&Date.now()>later);
 }
 async function doInstall(){
@@ -999,10 +1066,19 @@ function runShortcut(){
   const go=()=>{
     if(a==='gasto'||a==='entrada'){setKind(a==='gasto'?'out':'in');$('addForm').scrollIntoView({block:'center'});setTimeout(()=>$('aAmt').focus(),250)}
     else if(a==='cartoes')$('secCards').scrollIntoView({block:'start'});
+    else if(a==='ajuda')openHelp();
     else if(a==='guardar'){$('secSave').scrollIntoView({block:'center'});setTimeout(()=>$('svAmt').focus(),250)}
   };
   setTimeout(go,400);
 }
+
+/* ---------- como usar ---------- */
+function openHelp(){$('helpSheet').hidden=false;document.body.style.overflow='hidden';setTimeout(()=>{try{$('helpClose').focus()}catch(e){}},50)}
+function closeHelp(){$('helpSheet').hidden=true;document.body.style.overflow=''}
+$('helpBtn').onclick=openHelp;$('helpClose').onclick=closeHelp;$('helpOk').onclick=closeHelp;
+$('helpSheet').addEventListener('click',e=>{if(e.target.id==='helpSheet')closeHelp()});
+$('helpExample').onclick=()=>{closeHelp();if(hasData()&&!S.example){toast({t:'Você já tem dados',b:'O exemplo só aparece numa conta vazia, para não apagar o que você lançou.'});return}loadExample()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('helpSheet').hidden)closeHelp();if(!$('iosSheet').hidden)$('iosSheet').hidden=true}});
 
 function loadExample(){
   const m=monthOf(todayISO),d=n=>`${m}-${pad(Math.min(n,28))}`,a='c'+uid(),b='c'+uid();
